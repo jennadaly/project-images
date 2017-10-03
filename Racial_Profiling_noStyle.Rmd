@@ -1,0 +1,949 @@
+---
+title: "Traffic Stop Analysis <br> Racial Profiling Prohibition Project"
+output: 
+    html_document:
+        theme: null
+        highlight: null
+        css: styles.css
+        self_contained: false
+        lib_dir: libs
+---
+
+```{r setup, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Prepared by the [Connecticut Data Collaborative](http://ctrp3.ctdata.org/)
+
+***
+
+##### In partnership with the CCSU Institute for Municipal and Regional Policy, we are providing the third year of data from the Racial Profling Prohibition Project. These data are reported using the federal fiscal year which goes from October to September; the most recent year of data available are from October 2015 to September 2016. In this story, we analyze statewide traffic stop trends. 
+
+
+##### Key Findings:
+ - On average, there are over <font size="5">**580,000**</font> traffic stops that occur statewide, every year. 
+ - Speeding has remained the number one reason for stops for each year these data have been collected.  
+ - Searches are rare -- occurring less than <font size="5">**3%**</font> of all stops -- but black and hispanic drivers are more likely to be searched while white and non-hispanic drivers more likely to have contraband. 
+ 
+***
+
+##### The total number of stops per year has decreased over the past three years, roughly <font size="5">**6%**</font>. 
+
+ + <font size="5">**595,952**</font> stops in 2013-2014.
+
+ + <font size="5">**586,849**</font> stops in 2014-2015.
+
+ + <font size="5">**558,262**</font> stops in 2015-2016.
+ 
+***
+
+#### **Speeding is the number one reason for stopping drivers.** 
+
+##### In the first two years of data collection 'Other' was the second most common reason for pulling drivers over (after speeding). In the third year of data collection, three new categories were added to minimize the number of stops coded as 'Other'. As shown in the graph, STC (State Traffic Commission) Violations became a common reason (about <font size="5">**8.5%**</font>) for stopping cars; a lesser offense than a speeding ticket. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+#Read in supporting data
+totals <- read.csv(file.path(getwd(), "ctrp3-race-plot", "static", "data", "totals-plot.csv"), check.names=FALSE)
+reasons_no_code_final <- read.csv(file.path(getwd(), "ctrp3-reason-nocode-plot", "static", "data", "reason-nocode-plot.csv"), check.names=FALSE)
+reason_percent_totals_table <- read.csv(file.path(getwd(), "ctrp3-reason-nocode-table", "static", "data", "reason-nocode-table.csv"), check.names=FALSE)
+reason_with_code_final <- read.csv(file.path(getwd(), "ctrp3-reason-withcode-plot", "static", "data", "reason-withcode-plot.csv"), check.names=FALSE)
+reason_with_code_percent_totals_table <- read.csv(file.path(getwd(), "ctrp3-reason-withcode-table", "static", "data", "reason-withcode-table.csv"), check.names=FALSE)
+mv_violation3 <- read.csv(file.path(getwd(), "ctrp3-mv-tree", "static", "data", "mv-tree.csv"), check.names=FALSE)
+equip_violation3 <- read.csv(file.path(getwd(), "ctrp3-equip-tree", "static", "data", "equip-tree.csv"), check.names=FALSE)
+investigative3 <- read.csv(file.path(getwd(), "ctrp3-invest-tree", "static", "data", "invest-tree.csv"), check.names=FALSE)
+outcomes <- read.csv(file.path(getwd(), "ctrp3-outcome-plot", "static", "data", "outcome-plot.csv"), check.names=FALSE)
+outcomes_table <- read.csv(file.path(getwd(), "ctrp3-outcome-table", "static", "data", "outcome-table.csv"), check.names=FALSE)  
+outcomes_per_race_intervention_plot <- read.csv(file.path(getwd(), "ctrp3-intervention-race-plot", "static", "data", "intervention-race-plot.csv"), check.names=FALSE)  
+outcomes_per_ethnicity_intervention_plot <- read.csv(file.path(getwd(), "ctrp3-intervention-ethnicity-plot", "static", "data", "intervention-ethnicity-plot.csv"), check.names=FALSE)
+total_race_table_outcome <- read.csv(file.path(getwd(), "ctrp3-race-outcome-table", "static", "data", "race-outcome-table.csv"), check.names=FALSE)  
+total_ethnicity_table_outcome <- read.csv(file.path(getwd(), "ctrp3-ethnicity-outcome-table", "static", "data", "ethnicity-outcome-table.csv"), check.names=FALSE) 
+reason_per_race_intervention_plot <- read.csv(file.path(getwd(), "ctrp3-reason-race-plot", "static", "data", "reason-race-plot.csv"), check.names=FALSE)  
+reason_per_ethnicity_intervention_plot <- read.csv(file.path(getwd(), "ctrp3-reason-ethnicity-plot", "static", "data", "reason-ethnicity-plot.csv"), check.names=FALSE)  
+searches_pie_plot <- read.csv(file.path(getwd(), "ctrp3-searches-pie", "static", "data", "searches-pie.csv"), check.names=FALSE)  
+searches_by_race <- read.csv(file.path(getwd(), "ctrp3-searches-race-plot", "static", "data", "searches.csv"), check.names=FALSE)  
+searches_with_contraband <- read.csv(file.path(getwd(), "ctrp3-contraband-race-plot", "static", "data", "contraband.csv"), check.names=FALSE)  
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#PLOT REASONS WITHOUT CODE
+##########################################################################################################################################
+
+x <- list(
+  title = "Year", 
+  ticklen = 5,
+  tickwidth = 1
+)
+y1 <- list(
+  title = "Percent Reasons",
+  ticklen = 15,
+  tickwidth = 1
+)
+y2 <- list(
+  title = "Number of Stops",
+  ticklen = 15,
+  tickwidth = 1
+)
+m <- list(l=80, r=20, b=80) # l = left; r = right; t = top; b = bottom
+library(plotly)
+reasons_no_code_total_plot <- plot_ly(reasons_no_code_final, x = ~Federal.Fiscal.Year, y = ~`Speed Related.x`, type = 'bar',
+                                      name = 'Speed Related',
+                                      marker = list(color = 'indigo', width = 3), 
+                                      hoverinfo = 'text', 
+                                      #bargroup= 'group1',
+                                      legendgroup= 'group1',                   
+                                      text = ~paste('Percent Stops due to Speed Related: ', '<br>', `Speed Related.y`, '%')) %>% 
+  
+  #   add_trace(y = ~`Cell Phone.x`, name = 'Cell Phone',
+  #           marker = list(color = 'violet', width = 3),
+  #           hoverinfo = 'text',
+  #           bargroup = 'group1',
+  #           legendgroup= 'group1',
+  #                 text = ~paste('Percent Stops due to Cell Phone: ',
+  #                               '<br>', `Cell Phone.y`, '%')) %>%
+  # add_trace(y = ~`Registration.x`, name = 'Registration',
+  #           marker = list(color = 'green', width = 3),
+  #          hoverinfo = 'text',
+  #          bargroup = 'group1',
+  #          legendgroup= 'group1',
+  #                 text = ~paste('Percent Stops due to Registration: ',
+  #                               '<br>', `Registration.y`, '%')) %>%
+  # add_trace(y = ~`Defective Lights.x`, name = 'Defective Lights',
+  #           marker = list(color = 'red', width = 3),
+  #           hoverinfo = 'text',
+  #           bargroup = 'group1',
+  #           legendgroup= 'group1',
+  #                 text = ~paste('Percent Stops due to Defective Lights: ',
+  #                               '<br>', `Defective Lights.y`, '%')) %>%
+  # add_trace(y = ~`Moving Violation.x`, name = 'Moving Violation',
+  #           marker = list(color = 'yellow', width = 3),
+  #          hoverinfo = 'text',
+  #          bargroup = 'group1',
+  #          legendgroup= 'group1',
+  #                 text = ~paste('Percent Stops due to Moving Violation: ',
+  #                               '<br>', `Moving Violation.y`, '%')) %>%
+  # add_trace(y = ~`Traffic Control Signal.x`, name =  'Traffic Control Signal',
+  #           marker = list(color = 'purple', width = 3),
+  #          hoverinfo = 'text',
+  #          bargroup = 'group1',
+  #          legendgroup= 'group1',
+  #                 text = ~paste('Percent Stops due to Traffic Control Signal: ',
+  #                               '<br>',  `Traffic Control Signal.y`, '%')) %>%
+  # add_trace(y = ~`Stop Sign.x`, name =  'Stop Sign',
+  #           marker = list(color = 'blue', width = 3),
+  #          hoverinfo = 'text',
+  #          bargroup = 'group1',
+  #          legendgroup= 'group1',
+  #                 text = ~paste('Percent Stops due to Stop Sign: ',
+  #                               '<br>',  `Stop Sign.y`, '%')) %>%
+  # add_trace(y = ~`Seatbelt.x`, name = 'Seatbelt',
+  #           marker = list(color = 'bluegreen', width = 3),
+  #          hoverinfo = 'text',
+  #          bargroup = 'group1',
+  #          legendgroup= 'group1',
+  #                 text = ~paste('Percent Stops due to Seatbelt: ',
+  #                               '<br>', `Seatbelt.y`, '%')) %>%
+  #  add_trace(y = ~`Display of Plates.x`, name = 'Display of Plates',
+  #            #line = list(color = 'rgb(204,204,204)', width = 3),
+  #            marker = list(color = 'darkorange', width = 3),
+  #            hoverinfo = 'text',
+  #            bargroup = 'group1',
+  #            legendgroup= 'group1',
+  #                 text = ~paste('Percent Stops due to Display of Plates: ',
+  #                               '<br>', `Display of Plates.y`, '%')) %>%
+  # add_trace(y = ~`Suspended License.x`, name =  'Suspended License',
+  #           marker = list(color = 'lightblue', width = 3),
+  #          hoverinfo = 'text',
+  #          bargroup = 'group1',
+  #          legendgroup= 'group1',
+  #                 text = ~paste('Percent Stops due to Suspended License: ',
+  #                               '<br>',  `Suspended License.y`, '%')) %>%
+  # add_trace(y = ~`Window Tint.x`, name = 'Window Tint',
+  #           marker = list(color = 'grey', width = 3),
+  #          bargroup = 'group1',
+  #          legendgroup = 'group1',
+  #          hoverinfo = 'text',
+  #                 text = ~paste('Percent Stops due to Window Tint: ',
+  #                               '<br>', `Window Tint.y`, '%')) %>%
+  # add_trace(y = ~`Equipment Violation.x`, name = 'Equipment Violation',
+  #           marker = list(color = 'gray', width = 3),
+  #           hoverinfo = 'text',
+  #           bargroup = 'group1',
+  #           legendgroup= 'group1',
+  #                 text = ~paste('Percent Stops due to Equipment Violation: ',
+  #                               '<br>', `Equipment Violation.y`, '%')) %>%
+
+  add_trace(y = ~`Other.x`, 
+            name = 'Other',
+            marker = list(color = 'black', width = 3), 
+                        #bargroup= 'group2',
+
+            legendgroup= 'group2', 
+            hoverinfo = 'text', 
+            text = ~paste('Percent Stops due to Other: ', '<br>', `Other.y`, '%')) %>%
+  add_trace(y = ~`STC Violation.x`, name =  'STC Violation',
+            marker = list(color = 'cyan', width = 3), 
+                        #bargroup= 'group2',
+
+            legendgroup= 'group2',            
+            hoverinfo = 'text', 
+            text = ~paste('Percent Stops due to STC Violation: ', '<br>',  `STC Violation.y`, '%')) %>%    
+  add_trace(y = ~`Administrative Offense.x`, name = 'Administrative Offense',
+            marker = list(color = 'yellowgreen', width = 3),
+                        #bargroup= 'group2',
+
+            legendgroup= 'group2',            
+            hoverinfo = 'text', 
+            text = ~paste('Percent Stops due to Administrative Offense: ', '<br>', `Administrative Offense.y`, '%')) %>%  
+  add_trace(y = ~`Unlicensed Operation.x`, name = 'Unlicensed Operation',
+            marker = list(color = 'orange', width = 3),
+            #bargroup= 'group2',
+            legendgroup= 'group2',            
+            hoverinfo = 'text', 
+            text = ~paste('Percent Stops due to Unlicensed Operation: ', '<br>', `Unlicensed Operation.y`, '%')) %>%
+  layout(margin=m,
+         barmode = 'group', 
+         bargap = 0.1, 
+         #bargroupgap = 0.3,
+         title = "Total Traffic Stops by Reason", 
+         xaxis = x, yaxis = y2, 
+         legend = list(x = 0.8, y = 1.1, font = list(size=10)), 
+         width=750, height=500)
+
+reasons_no_code_total_plot
+```
+ 
+***
+
+##### The following table outlines the distribution of the remaining recorded reasons for traffic stops. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+knitr::kable(reason_percent_totals_table, format="html") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive", font_size = 7))
+
+
+```
+
+*** 
+
+##### Stops are classified into three categories: Motor Vehicle Violations, Equipment Violations, and Investigative Stops. 
+
+#### **The majority of stops are for motor vehicle violations.** 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#PLOT REASONS WITH CODE
+##################################################################################################################################################
+x <- list(
+  title = "Year", 
+  ticklen = 5,
+  tickwidth = 1
+)
+y1 <- list(
+  title = "Percent Reasons",
+  ticklen = 15,
+  tickwidth = 1
+)
+y2 <- list(
+  title = "Number of Stops",
+  ticklen = 15,
+  tickwidth = 1
+)
+m <- list(l=80, r=20, b=80) # l = left; r = right; t = top; b = bottom
+library(plotly)
+
+reasons_with_code_total_plot <- plot_ly(reason_with_code_final, x = ~Federal.Fiscal.Year, y = ~`Investigative Stop.x`, type = 'bar',
+                                        name = 'Investigative Stop',
+                                        marker = list(color = 'darkred', width = 3), 
+                                        hoverinfo = 'text', 
+                                        bargroup = 'group1',
+                                        legendgroup= 'group1',                   
+                                        text = ~paste('Percent Stops due to Investigative Stop: ', '<br>', `Investigative Stop.y`, '%')) %>% 
+      add_trace(y = ~`Equipment Violation.x`, name = 'Equipment Violation',
+                marker = list(color = 'green', width = 3), 
+                bargroup = 'group1',
+                legendgroup= 'group1', 
+                text = ~paste('Percent Stops due to Equipment Violation: ', '<br>', `Equipment Violation.y`, '%')) %>% 
+      add_trace(y = ~`Motor Vehicle Violation.x`, name = 'Motor Vehicle Violation',
+                marker = list(color = 'darkblue', width = 3), 
+                bargroup = 'group1',
+                legendgroup= 'group1', 
+                text = ~paste('Percent Stops due to Motor Vehicle Violation: ', '<br>', `Motor Vehicle Violation.y`, '%')) %>%  
+      layout(margin=m,
+             #barmode = 'stack', 
+             bargap = 0.1, 
+             #bargroupgap = 0.3, 
+             title = "Total Traffic Stops by Intervention Category", 
+             xaxis = x, yaxis = y2, 
+             legend = list(x = 1, y = 1, font = list(size=10)), 
+             width=750, height=500)
+
+reasons_with_code_total_plot
+
+```
+
+
+ 
+***
+
+##### The following table outlines the distribution of the recorded categories for traffic stops. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+knitr::kable(reason_with_code_percent_totals_table) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), full_width=T)
+
+
+```
+
+
+***
+
+##### In 2015-2016, **speeding** was the number one reason within motor vehicle violations. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(treemap)
+mv_tree3 <- treemap(mv_violation3, #Your data frame object
+        index=c("StatutoryReasonForStop"),  #A list of your categorical variables
+        vSize = "Total Stops Per Reason",  #This is your quantitative variable
+        vColor = "Total Stops Per Reason",
+        type="value", #Type sets the organization and color scheme of your treemap
+        palette = "RdBu",  #Select your color palette from the RColorBrewer presets or make your own.
+        title="Motor Vehicle Violations 2015-2016", #Customize your title
+        format.legend = list(scientific = FALSE),
+        fontsize.title = 14 #Change the font size of the title
+        )
+```
+
+***
+
+##### In 2015-2016, **defective lights** was the main cause for equipment violations.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+equip_tree3 <- treemap(equip_violation3, #Your data frame object
+        index=c("StatutoryReasonForStop"),  #A list of your categorical variables
+        vSize = "Total Stops Per Reason",  #This is your quantitative variable
+        vColor = "Total Stops Per Reason",
+        type="value", #Type sets the organization and color scheme of your treemap
+        palette = "RdYlGn",  #Select your color palette from the RColorBrewer presets or make your own.
+        title="Equipment Violations 2015-2016", #Customize your title
+        format.legend = list(scientific = FALSE),        
+        fontsize.title = 14 #Change the font size of the title
+        )
+```
+
+***
+
+##### In 2015-2016, **other** was the number one reason for investigative stops. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+investigate_tree3 <- treemap(investigative3, #Your data frame object
+        index=c("StatutoryReasonForStop"),  #A list of your categorical variables
+        vSize = "Total Stops Per Reason",  #This is your quantitative variable
+        vColor = "Total Stops Per Reason",
+        type="value", #Type sets the organization and color scheme of your treemap
+        palette = "YlOrRd",  #Select your color palette from the RColorBrewer presets or make your own.
+        title="Investigative Stops 2015-2016", #Customize your title
+        format.legend = list(scientific = FALSE),
+        fontsize.title = 14 #Change the font size of the title
+        )
+```
+
+***
+
+#### **Most stops result in a ticket (infraction).** 
+
+##### Over the past three years, the percentage of tickets issued has decreased, but verbal warnings have inceased.  
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#PLOT OUTCOMES
+##################################################################################################################################################
+
+x <- list(
+  title = "Year", 
+  ticklen = 5,
+  tickwidth = 1
+)
+y1 <- list(
+  title = "Percent Interventions",
+  ticklen = 15,
+  tickwidth = 1
+)
+y2 <- list(
+  title = "Number of Stops",
+  ticklen = 15,
+  tickwidth = 1
+)
+m <- list(l=80, r=20, b=80) # l = left; r = right; t = top; b = bottom
+  
+
+outcomes_total_plot <- plot_ly(outcomes, x = ~Federal.Fiscal.Year, y = ~`Ticket.y`, type = 'bar',
+                               name = 'Ticket',
+                  marker = list(color = 'darkred', width = 3), 
+                  hoverinfo = 'text', 
+                  text = ~paste('Percent Stops ended with Tickets: ', 
+                                '<br>', Ticket.x, '%')) %>% 
+  add_trace(y = ~`Verbal Warning.y`, name = 'Verbal Warning',
+            marker = list(color = 'magenta', width = 3), 
+                  hoverinfo = 'text',  
+                  text = ~paste('Percent Stops ended with Verbal Warnings: ', 
+                                '<br>', `Verbal Warning.x`, '%')) %>%
+  add_trace(y = ~`Written Warning.y`, name = 'Written Warning',
+            marker = list(color = 'darkpurple', width = 3), 
+            hoverinfo = 'text', 
+                  text = ~paste('Percent Stops ended with Written Warnings: ', 
+                                '<br>', `Written Warning.x`, '%')) %>% 
+   add_trace(y = ~`Misdemeanor Summons.y`, name = 'Misdemeanor Summons',
+             marker = list(color = 'yellow', width = 3), 
+             hoverinfo = 'text', 
+                  text = ~paste('Percent Stops ended with Misdemeanor Summons: ', 
+                                '<br>', `Misdemeanor Summons.x`, '%')) %>%
+  add_trace(y = ~`No Disposition.y`, name = 'No Disposition',
+            marker = list(color = 'grey', width = 3), 
+            hoverinfo = 'text', 
+                  text = ~paste('Percent Stops ended with No Dispositions: ', 
+                                '<br>', `No Disposition.x`, '%')) %>%
+  add_trace(y = ~`Uniform Arrest Report.y`, name = 'Uniform Arrest Report',
+            marker = list(color = 'pink', width = 3), 
+           hoverinfo = 'text', 
+                  text = ~paste('Percent Stops ended with Uniform Arrest Reports: ', 
+                                '<br>', `Uniform Arrest Report.x`, '%')) %>%
+  layout(margin=m,
+         #barmode='stack',
+         barmode = 'group', 
+         bargap = 0.1,         
+         #bargroupgap = 0.1, 
+         title = "Outcome of Stops", 
+         xaxis = x, yaxis = y2, 
+         legend = list(x = 0.8, y = 0.9), width=750, height=500)
+
+outcomes_total_plot
+```
+
+***
+
+#### The table below outlines the percentages of each outcome per total number of traffic stops. 
+
+```{r, echo=FALSE,message=FALSE, warning=FALSE}
+
+knitr::kable(outcomes_table) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), full_width=F)
+
+```
+
+
+***
+
+##### The majority of stops take place when the driver is *White* and/or *Non-Hispanic*. Regardless of the reason, these drivers are being pulled over the most, due to the proportion of the population of drivers in Connecticut.
+
+
+```{r, echo=FALSE,message=FALSE, warning=FALSE}
+
+x <- list(
+  title = "Year", 
+  ticklen = 5,
+  tickwidth = 1,
+  tickfont = list(size = 10)
+)
+y <- list(
+  title = "Number of Stops",
+  ticklen = 15,
+  tickwidth = 1
+)
+
+m <- list(l=70, r=20, b=50, t=80) # l = left; r = right; t = top; b = bottom
+
+plot_race_total <- plot_ly(totals, x = ~Federal.Fiscal.Year, 
+                     y = ~`Total White Stops`, type = 'bar', 
+                     name = 'White', 
+                     legendgroup= 'group1', 
+                     hoverinfo = 'text', 
+                     text = ~paste('White Stops: ', 
+                                '<br>', `Total White Stops`),                     
+                     marker = list(color = 'blue')) %>%
+    add_trace(y = ~`Total Non-White Stops`, name = 'Non-White',
+              legendgroup= 'group1', 
+                     text = ~paste('Non-White Stops: ', 
+                                '<br>', `Total Non-White Stops`),               
+              marker = list(color = 'gray')) %>% 
+    layout(margin=m,
+         barmode = 'group',
+         title = "Race Totals", 
+         bargap = 0.3,
+         #bargroupgap = 0.3,
+         xaxis = x, yaxis = y, width=750, height=500)
+
+plot_race_total
+
+```
+  
+  
+```{r, echo=FALSE,message=FALSE, warning=FALSE}
+
+x <- list(
+  title = "Year", 
+  ticklen = 5,
+  tickwidth = 1,
+  tickfont = list(size = 10)
+)
+y <- list(
+  title = "Number of Stops",
+  ticklen = 15,
+  tickwidth = 1
+)
+
+m <- list(l=70, r=20, b=50, t=80) # l = left; r = right; t = top; b = bottom
+
+plot_ethnicity_total <- plot_ly(totals, x = ~Federal.Fiscal.Year, 
+                     y = ~`Total Hispanic Stops`, type = 'bar', 
+                     legendgroup= 'group2', 
+                     name = 'Hispanic', 
+                     hoverinfo = 'text', 
+                     text = ~paste('Hispanic Stops: ', 
+                                '<br>', `Total Hispanic Stops`),                     
+                     marker = list(color = 'darkorange')) %>%
+    add_trace(y = ~`Total Non-Hispanic Stops`, name = 'Non-Hispanic',
+              legendgroup= 'group2', 
+                     text = ~paste('Non-Hispanic Stops: ', 
+                                '<br>', `Total Non-Hispanic Stops`),               
+              marker = list(color = 'limegreen')) %>% 
+  
+    layout(margin=m,
+         barmode = 'group',
+         title = "Ethnicity Totals", 
+         xaxis = x, yaxis = y, 
+         bargap = 0.3,
+         #bargroupgap = 0.3,
+         legend = list(x=1, y=1, orientation = 'h'), width=750, height=500)
+
+plot_ethnicity_total
+  
+# plot_race_ethnicity <- subplot(plot_race_total, plot_ethnicity_total, shareY=TRUE)
+# 
+# plot_race_ethnicity
+
+```
+
+***
+
+##### This makes it important to normalize the stops across each race and ethnicity. Therefore, we can study how each race and ethnicity fair overall. When we break out each outcome, we can see non-White drivers and Hispanic drivers are receiving higher percentages of arrests and/or summons. 
+
+```{r, echo=FALSE,message=FALSE, warning=FALSE}
+x <- list(
+  title = "Outcome", 
+  ticklen = 5,
+  tickwidth = 1,
+  tickangle=15, 
+  tickfont = list(size = 10)
+)
+y <- list(
+  title = "Percent",
+  ticklen = 15,
+  tickwidth = 1
+)
+
+m <- list(l=80, r=50, t=120, b=80) # l = left; r = right; t = top; b = bottom
+
+plot_intervention_race <- plot_ly(outcomes_per_race_intervention_plot, x = ~InterventionDispositionCode, 
+                     y = ~`Avg Pct Non-White`, type = 'bar', 
+                     name = 'Total Non-White', 
+                     legendgroup = 'group1',
+                     hoverinfo = 'text', 
+                     text = ~paste('Average Number Stops of Non-White Drivers: ', 
+                                '<br>', `Avg Num Non-White`),
+                     marker = list(color = 'gray')) %>%
+    add_trace(y = ~`Avg Pct White`, name = 'Total White',
+                                   hoverinfo = 'text',
+                                   legendgroup = 'group1',
+                     text = ~paste('Average Number Stops of White Drivers: ',
+                                '<br>', `Avg Num White`),
+              marker = list(color = 'blue')) %>%  
+    layout(margin=m,
+         #barmode='stack',
+         #bargroupgap = 0.1, 
+         title = "Outcome by Race - Averaged Over Three Years",
+         legend = list(x =0.25, y=1.15, orientation = 'h', font = list(size=10)),
+         xaxis = x, yaxis = y)
+
+plot_intervention_race
+
+```
+
+*** 
+
+##### The following table outlines the total number and percent of traffic stops outcomes by race, averaged over the three years.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+knitr::kable(total_race_table_outcome) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+```
+
+
+```{r, echo=FALSE,message=FALSE, warning=FALSE}
+
+plot_intervention_ethnicity <- plot_ly(outcomes_per_ethnicity_intervention_plot, x = ~InterventionDispositionCode, 
+                     y = ~`Avg Pct Hispanic`, type = 'bar', 
+                     name = 'Total Hispanic', 
+                     legendgroup = 'group2',
+                     hoverinfo = 'text', 
+                     text = ~paste('Average Number Stops of Hispanic Drivers: ', 
+                                '<br>', `Avg Num Hispanic`),
+                     marker = list(color = 'darkorange')) %>%
+    add_trace(y = ~`Avg Pct Non-Hispanic`, name = 'Total Non-Hispanic',
+                                   hoverinfo = 'text',
+                                   legendgroup = 'group2',
+                     text = ~paste('Average Number Stops of Non-Hispanic Drivers: ',
+                                '<br>', `Avg Num Non-Hispanic`),
+              marker = list(color = 'limegreen')) %>%  
+    layout(margin=m,
+         #barmode='stack',
+         #bargroupgap = 0.1, 
+         title = "Outcome by Ethnicity - Averaged Over Three Years", 
+         legend = list(x =0.25, y=1.15, orientation = 'h', font = list(size=10)),
+         xaxis = x, yaxis = y)
+
+plot_intervention_ethnicity
+```
+
+***
+
+##### The following table outlines the total number and percent of traffic stops outcomes by ethnicity, averaged over the three years. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+knitr::kable(total_ethnicity_table_outcome) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), full_width=T)
+
+
+```
+
+
+
+***
+
+##### If we look at each reason for a traffic stop, we can see non-White drivers are being pulled over in higher percentages due to suspended license and window tint. 
+
+
+```{r, echo=FALSE,message=FALSE, warning=FALSE}
+x <- list(
+  title = "Reason", 
+  ticklen = 5,
+  tickwidth = 1,
+  tickangle=30, 
+  tickfont = list(size = 10)
+)
+y <- list(
+  title = "Percent",
+  ticklen = 15,
+  tickwidth = 1
+)
+
+m <- list(l=80, r=50, t=120, b=100) # l = left; r = right; t = top; b = bottom
+library(plotly)
+plot_reason_race <- plot_ly(reason_per_race_intervention_plot, x = ~StatutoryReasonForStop, 
+                     y = ~`Avg Pct Non-White`, type = 'bar', 
+                     name = 'Total Non-White', 
+                     legendgroup = 'group1',
+                     hoverinfo = 'text', 
+                     text = ~paste('Average Number Stops of Non-White Drivers: ', 
+                                '<br>', `Avg Num Non-White`),
+                     marker = list(color = 'gray')) %>%
+    add_trace(y = ~`Avg Pct White`, name = 'Total White',
+                                   hoverinfo = 'text',
+                                   legendgroup = 'group1',
+                     text = ~paste('Average Number Stops of White Drivers: ',
+                                '<br>', `Avg Num White`),
+              marker = list(color = 'blue')) %>%  
+    layout(margin=m,
+         #barmode='stack',
+         #bargroupgap = 0.1, 
+         title = "Reason by Race - Averaged Over Three Years",
+         legend = list(x =0.75, y=1.15, orientation = 'h', font = list(size=10)),
+         xaxis = x, yaxis = y)
+
+plot_reason_race
+
+```
+
+***
+
+##### We also can see Hispanic drivers are being pulled over in higher percentages due to unlicensed operation and window tint. 
+
+
+```{r, echo=FALSE,message=FALSE, warning=FALSE}
+x <- list(
+  title = "Reason", 
+  ticklen = 5,
+  tickwidth = 1,
+  tickangle=30, 
+  tickfont = list(size = 10)
+)
+y <- list(
+  title = "Percent",
+  ticklen = 15,
+  tickwidth = 1
+)
+
+m <- list(l=80, r=50, t=120, b=120) # l = left; r = right; t = top; b = bottom
+plot_reason_ethnicity <- plot_ly(reason_per_ethnicity_intervention_plot, x = ~StatutoryReasonForStop, 
+                     y = ~`Avg Pct Hispanic`, type = 'bar', 
+                     name = 'Total Hispanic', 
+                     legendgroup = 'group2',
+                     hoverinfo = 'text', 
+                     text = ~paste('Average Number Stops of Hispanic Drivers: ', 
+                                '<br>', `Avg Num Hispanic`),
+                     marker = list(color = 'darkorange')) %>%
+    add_trace(y = ~`Avg Pct Non-Hispanic`, name = 'Total Non-Hispanic',
+                                   hoverinfo = 'text',
+                                   legendgroup = 'group2',
+                     text = ~paste('Average Number Stops of Non-Hispanic Drivers: ',
+                                '<br>', `Avg Num Non-Hispanic`),
+              marker = list(color = 'limegreen')) %>%  
+    layout(margin=m,
+        # barmode='stack',
+         #bargroupgap = 0.3, 
+         title = "Reason by Ethnicity - Averaged Over Three Years", 
+         legend = list(x =0.75, y=1.15, orientation = 'h', font = list(size=10)),
+         xaxis = x, yaxis = y,  width=750, height=500)
+
+plot_reason_ethnicity
+
+
+```
+
+***
+
+#### **Searches are rare**
+
+##### Over the past three years, only about <font size="5">**3%**</font> of traffic stops statewide included a search of the vehicle. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pie_searches <- plot_ly(searches_pie_plot, labels = ~`Topic`, 
+                     values = ~`Value`, type = 'pie', 
+                     textposition = 'outside',
+                     textinfo = 'label+percent',
+                     hoverinfo = 'text',
+                     text = ~paste(Topic, '<br>', Value, '%'), 
+                     domain = list(x = c(0, 1), y = c(0.1, 0.9))) %>%
+  layout(title = 'Traffic Stops by Searches',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE), width=750, height=500)
+
+pie_searches
+
+```
+
+***
+
+##### *Black* and/or *Hispanic* drivers are more likely to be *searched*. 
+
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+
+x <- list(
+  title = "Year", 
+  ticklen = 5,
+  tickwidth = 1,
+  tickangle=0, 
+  tickfont = list(size = 10)
+)
+y <- list(
+  title = "Percent",
+  ticklen = 15,
+  tickwidth = 1
+)
+
+m <- list(l=50, r=20, b=50) # l = left; r = right; t = top; b = bottom
+
+plot_race_searches <- plot_ly(searches_by_race, x = ~Federal.Fiscal.Year, 
+                     y = ~`Percent White Searched`, type = 'bar',
+                     name = 'Percent White Searched', 
+                     line = list(color = 'blue', width = 3), 
+                     marker = list(color = 'blue', width = 3), 
+                     hoverinfo = 'text', 
+                     text = ~paste('Percent White Searched', '<br>', `Percent White Searched`, '%')) %>%
+    add_trace(y = ~`Percent Black Searched`, name = 'Percent Black Searched',
+              line = list(color = 'green', width = 3), 
+              marker = list(color = 'green', width = 3),
+              hoverinfo = 'text', 
+              text = ~paste('Percent Black Searched', '<br>', `Percent Black Searched`, '%')) %>%
+    add_trace(y = ~`Percent Asian Pacific Searched`, name = 'Percent Asian Pacific Searched',
+              line = list(color = 'red', width = 3), marker = list(color = 'red', width = 3),
+              hoverinfo = 'text', 
+              text = ~paste('Percent Asian Pacific Searched', '<br>', `Percent Asian Pacific Searched`, '%')) %>%
+    add_trace(y = ~`Percent American Indian / Alaska Native Searched`, name = 'Percent American Indian / Alaska Native Searched',
+              line = list(color = 'orange', width = 3), 
+              marker = list(color = 'orange', width = 3),
+              hoverinfo = 'text', 
+              text = ~paste('Percent American Indian / Alaska Native Searched', '<br>', `Percent American Indian / Alaska Native Searched`, '%')) %>%
+    # add_trace(y = ~`Percent Unknown Race Searched`, name = 'Percent Unknown Race Searched',
+    #           line = list(color = 'gray', width = 3),
+    #           marker = list(color = 'gray', width = 3),
+    #           hoverinfo = 'text',
+    #           text = ~paste('Percent Unknown Race Searched', '<br>', `Percent Unknown Race Searched`, '%')) %>%
+    layout(margin=m,
+         barmode='group',
+         #bargroupgap = 0.1, 
+         title = "Percentage of Stops Searched by Race", 
+         xaxis = x, yaxis = y, 
+         legend = list(orientation='h', traceorder = 'normal'))
+
+plot_race_searches
+
+```
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+
+x <- list(
+  title = "Year", 
+  ticklen = 5,
+  tickwidth = 1,
+  tickangle=0, 
+  tickfont = list(size = 10)
+)
+y <- list(
+  title = "Percent",
+  ticklen = 15,
+  tickwidth = 1
+)
+
+m <- list(l=50, r=20, b=80) # l = left; r = right; t = top; b = bottom
+
+plot_ethnicity_searches <- plot_ly(searches_by_race, x = ~Federal.Fiscal.Year, 
+                     y = ~`Percent Hispanic Searched`, type = 'bar',
+                     name = 'Percent Hispanic Searched', 
+                     line = list(color = 'darkorange', width = 3), 
+                     marker = list(color = 'darkorange', width = 3), 
+                     hoverinfo = 'text', 
+                     text = ~paste('Percent Hispanic Searched', '<br>', `Percent Hispanic Searched`, '%')) %>%
+    add_trace(y = ~`Percent Non-Hispanic Searched`, name = 'Percent Non-Hispanic Searched',
+              line = list(color = 'limegreen', width = 3), 
+              marker = list(color = 'limegreen', width = 3),
+              hoverinfo = 'text', 
+              text = ~paste('Percent Non-Hispanic Searched', '<br>', `Percent Non-Hispanic Searched`, '%')) %>%
+    layout(margin=m,
+         barmode='group',
+         bargap = 0.1,
+         #bargroupgap = 0.1, 
+         title = "Percentage of Stops Searched by Ethnicity", 
+         xaxis = x, yaxis = y, 
+         legend = list(orientation='h'))
+
+plot_ethnicity_searches
+
+```
+
+***
+
+##### Contraband is typically discovered as a result of a vehicle search, but there have been instances where contraband was found, but there was no search conducted. Over the past three years, the percentage of total contraband cases where no search was initiated occurred about <font size="5">**13%**</font> of the time. 
+
+<center> ![](/home/jdaly/Desktop/Data/Racial_Profiling_Project/ctrp3-car-jpg) </center>
+
+***
+
+##### When a search is conducted, *white* and/or *non-hispanic* drivers are more likely to possess *contraband*.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+x <- list(
+  title = "Year", 
+  ticklen = 5,
+  tickwidth = 1,
+  tickangle=0, 
+  tickfont = list(size = 10)
+)
+y <- list(
+  title = "Percent",
+  ticklen = 15,
+  tickwidth = 1
+)
+
+m <- list(l=50, t=50, b=70) # l = left; r = right; t = top; b = bottom
+
+plot_race_contraband <- plot_ly(searches_with_contraband, x = ~Federal.Fiscal.Year, 
+                     y = ~`Percent White with Contraband`, 
+                     type = 'bar',
+                     name = 'Percent White with Contraband', 
+                     line = list(color = 'blue', width = 3), 
+                     marker = list(color = 'blue', width = 3), 
+                     hoverinfo = 'text', 
+                     text = ~paste('Percent White with Contraband', '<br>', `Percent White with Contraband`, '%')) %>%
+    add_trace(y = ~`Percent Black with Contraband`, 
+              name = 'Percent Black with Contraband',
+              line = list(color = 'green', width = 3), 
+              marker = list(color = 'green', width = 3),
+              hoverinfo = 'text', 
+              text = ~paste('Percent Black with Contraband', '<br>', `Percent Black with Contraband`, '%')) %>%
+    add_trace(y = ~`Percent Asian Pacific with Contraband`, 
+              name = 'Percent Asian Pacific with Contraband',
+              line = list(color = 'red', width = 3), 
+              marker = list(color = 'red', width = 3),
+              hoverinfo = 'text',
+              text = ~paste('Percent Asian Pacific with Contraband', '<br>', `Percent Asian Pacific with Contraband`, '%')) %>%
+    add_trace(y = ~`Percent American Indian / Alaska Native with Contraband`, 
+              name = 'Percent American Indian / Alaska Native with Contraband',
+              line = list(color = 'orange', width = 3), 
+              marker = list(color = 'orange', width = 3),
+              hoverinfo = 'text',
+              text = ~paste('Percent American Indian / Alaska Native with Contraband', '<br>', `Percent American Indian / Alaska Native with Contraband`, '%')) %>%
+    layout(margin=m,
+         barmode='group',
+         bargap = 0.1,         
+         #bargroupgap = 0.1, 
+         title = "Percentage of Searches with Contraband by Race", 
+         xaxis = x, yaxis = y, 
+        legend = list(orientation='h'))
+
+plot_race_contraband
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+x <- list(
+  title = "Year", 
+  ticklen = 5,
+  tickwidth = 1,
+  tickangle=0, 
+  tickfont = list(size = 10)
+)
+y <- list(
+  title = "Percent",
+  ticklen = 15,
+  tickwidth = 1
+)
+
+m <- list(l=50, t=50, b=100) # l = left; r = right; t = top; b = bottom
+
+plot_ethnicity_contraband <- plot_ly(searches_with_contraband, x = ~Federal.Fiscal.Year, 
+                     y = ~`Percent Hispanic with Contraband`, 
+                     type = 'bar',
+                     name = 'Percent Hispanic with Contraband', 
+                     line = list(color = 'darkorange', width = 3), 
+                     marker = list(color = 'darkorange', width = 3), 
+                     hoverinfo = 'text', 
+                     text = ~paste('Percent Hispanic with Contraband', '<br>', `Percent Hispanic with Contraband`, '%')) %>%
+    add_trace(y = ~`Percent Non-Hispanic with Contraband`, 
+              name = 'Percent Non-Hispanic with Contraband',
+              line = list(color = 'limegreen', width = 3), 
+              marker = list(color = 'limegreen', width = 3),
+              hoverinfo = 'text', 
+              text = ~paste('Percent Non-Hispanic with Contraband', '<br>', `Percent Non-Hispanic with Contraband`, '%')) %>%
+
+    layout(margin=m,
+         barmode='group',
+         bargap = 0.1,         
+         #bargroupgap = 0.1, 
+         title = "Percentage of Searches with Contraband by Ethnicity", 
+         xaxis = x, yaxis = y, 
+         legend = list(orientation = 'h'))
+
+plot_ethnicity_contraband
+
+```
+
