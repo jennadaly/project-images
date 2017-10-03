@@ -39,7 +39,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #### **Speeding is the number one reason for stopping drivers.** 
 
-##### In the first two years of data collection 'Other' was the second most common reason for pulling drivers over (after speeding). In the third year of data collection, three new categories were added to minimize the number of stops coded as 'Other'. As shown in the graph, STC (State Traffic Commission) Violations became a common reason (about <font size="5">**8.5%**</font>) for stopping cars; a lesser offense than a speeding ticket. 
+In the first two years of data collection 'Other' was the second most common reason for pulling drivers over (after speeding). In the third year of data collection, three new categories were added to minimize the number of stops coded as 'Other'. As shown in the graph, STC (State Traffic Commission) Violations became a common reason (about <font size="5">**8.5%**</font>) for stopping cars; a lesser offense than a speeding ticket. 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
