@@ -47,6 +47,9 @@ In the first two years of data collection 'Other' was the second most common rea
 totals <- read.csv(file.path(getwd(), "ctrp3-race-plot", "static", "data", "totals-plot.csv"), check.names=FALSE)
 reasons_no_code_final <- read.csv(file.path(getwd(), "ctrp3-reason-nocode-plot", "static", "data", "reason-nocode-plot.csv"), check.names=FALSE)
 reason_percent_totals_table <- read.csv(file.path(getwd(), "ctrp3-reason-nocode-table", "static", "data", "reason-nocode-table.csv"), check.names=FALSE)
+
+reason_percent_totals_table_long <- read.csv(file.path(getwd(), "ctrp3-reason-nocode-table", "static", "data", "reason-nocode-table-long.csv"), check.names=FALSE)
+
 reason_with_code_final <- read.csv(file.path(getwd(), "ctrp3-reason-withcode-plot", "static", "data", "reason-withcode-plot.csv"), check.names=FALSE)
 reason_with_code_percent_totals_table <- read.csv(file.path(getwd(), "ctrp3-reason-withcode-table", "static", "data", "reason-withcode-table.csv"), check.names=FALSE)
 mv_violation3 <- read.csv(file.path(getwd(), "ctrp3-mv-tree", "static", "data", "mv-tree.csv"), check.names=FALSE)
@@ -221,7 +224,7 @@ reasons_no_code_total_plot
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
-knitr::kable(reason_percent_totals_table, format="html") %>% 
+knitr::kable(reason_percent_totals_table_long, format="html") %>% 
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive", font_size = 7))
 
 

@@ -260,13 +260,26 @@ reason_percent_totals_table$`Window Tint`             <- paste0(reason_percent_t
 reason_percent_totals_table <- reason_percent_totals_table %>% 
   select (`Federal Fiscal Year`, `Speed Related`, `Cell Phone`, `Registration`, `Defective Lights`, `Moving Violation`, `Traffic Control Signal`, `Stop Sign`, `Seatbelt`, `Display of Plates`, `Suspended License`, `Window Tint`, `Equipment Violation`, `Other`, `STC Violation`, `Administrative Offense`, `Unlicensed Operation`)
 
+test_long <- gather(reason_percent_totals_table, Reason, Percent, 2:17, factor_key=FALSE)
+
+test_wide <- spread(test_long, `Federal Fiscal Year`, Percent)
+
+
 # Write to File
 write.table(
   reason_percent_totals_table,
   file.path(getwd(), "ctrp3-reason-nocode-table", "static", "data", "reason-nocode-table.csv"),
   sep = ",",
   row.names = F
-)           
+)       
+
+# Write to File
+write.table(
+  test_wide,
+  file.path(getwd(), "ctrp3-reason-nocode-table", "static", "data", "reason-nocode-table-long.csv"),
+  sep = ",",
+  row.names = F
+)   
               
 reason_with_code <- new_df %>% 
   select(Federal.Fiscal.Year, SubjectRaceCode, SubjectEthnicityCode, InterventionReasonCode ) %>% 
